@@ -22,19 +22,30 @@ def main(request):
 			body_unicode = request.body.decode('utf-8')
 			data = json.loads(body_unicode)
 
+			# get board labels
+			labels_response = get_nested_objects('boards',board_id, 'labels')
+			labels = json.loads(labels_response.text)
+
 			# get board lists
 			lists_response = get_nested_objects('boards',board_id,'lists')
 			lists = json.loads(lists_response.text)
 
 			for list_obj in lists:
 				list_obj_id = list_obj['id']
-				cards_response = get_nested_objects('lists', list_obj_id, 'cards')
-				cards = json.loads(cards_response.text)
 
-				for card_obj in cards:
-					get_cards(card_obj)
+				if list_obj['name'] == 'Empresas':
+					continue
+				
+				else:
+					cards_response = get_nested_objects('lists', list_obj_id, 'cards')
+					cards = json.loads(cards_response.text)
+
+					for card_obj in cards:
+						update_card_labels(card_obj,labels)
 					
 		except Exception as e:
 			raise e
 
 	return HttpResponse(status=200)
+
+

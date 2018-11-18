@@ -12,15 +12,37 @@ key = file_key.read()
 board_id = '5bdb65794ac71e0cc84ec17b'
 api_url = 'https://api.trello.com/1'
 
-def get_cards(card_obj):
+# deadline variables
+ATENTION_DEADLINE = 7
+URGENT_DEADLINE = 12
+
+def update_card_labels(card_obj, labels):
+
+	updated_label = {
+			'id': '5bdb6579a724a908c0b057d8', 
+			'idBoard': '5bdb65794ac71e0cc84ec17b', 
+			'name': 'Atualizado', 
+			'color': 'green'
+	}
+
+	atention_label = {
+			'id':'5bdb6579a724a908c0b057d7',
+			'idBoard':'5bdb65794ac71e0cc84ec17b',
+			'name':'Atenção',
+			'color':'yellow'
+	}
+
+	urgent_label = {
+			'id':'5bdb6579a724a908c0b057d9',
+			'idBoard':'5bdb65794ac71e0cc84ec17b',
+			'name':'Urgente',
+			'color':'red'
+	}
 
 	card_id = card_obj['id']
-
+	card_labels = card_obj['labels']
 	card_date = card_obj['dateLastActivity']
-	card_date = time.strptime(card_date[:19], "%Y-%m-%dT%H:%M:%S")
-	card_date = time.strftime("%d/%m/%Y", card_date)
-	card_date = card_date.split('/')
-	card_date_day = int(card_date[0])
+	card_date_day = format_date(card_date)
 
 	now = time.asctime()
 	now = time.strptime(now)
@@ -30,13 +52,48 @@ def get_cards(card_obj):
 
 	time_inert = now_day - card_date_day
 
-	post_label('cards',card_id,'green')
+	not_in = True
+
+	# updated
+	if (time_inert < ATENTION_DEADLINE):
+		for label in card_labels:
+			if label['name'] == 'Atualizado':
+				not_in = False
+				break
+		if not_in:
+			post_label('cards',card_id,updated_label)
+
+	# atention
+	elif (time_inert < URGENT_DEADLINE):
+		not_in = True
+		for label in card_labels:
+			if label['name'] == 'Atenção':
+				not_in = False
+				break
+		if not_in:
+			post_label('cards',card_id,'atention_label')
+
+	# urgent
+	else:
+		not_in = True
+		for label in card_labels:
+			if label['name'] == 'Urgente':
+				not_in = False
+				break
+		if not_in:
+			post_label('cards',card_id,'urgent_label')
+
 
 
 def get_nested_objects(ext_object, object_id, nested_object):
 
 	url = '{}/{}/{}/{}'.format(api_url,ext_object,object_id,nested_object)
-	querystring = {'key':key, 'token':token}
+	
+	querystring = {
+		'key':key, 
+		'token':token
+	}
+	
 	response = requests.get(url, params=querystring)
 
 	return response
@@ -45,10 +102,51 @@ def get_nested_objects(ext_object, object_id, nested_object):
 def post_label(ext_object, object_id, label):
 
 	url = '{}/{}/{}/{}'.format(api_url,ext_object,object_id,'labels')
+	
 	querystring = {
-					'color':label,
-				   	'key':key, 
-				   	'token':token
-				  }
+		'key':key, 
+		'token':token
+	}
+
+	querystring.update(label)
 
 	response = requests.post(url, params=querystring)
+
+
+def format_date(date):
+
+	date = time.strptime(date[:19], "%Y-%m-%dT%H:%M:%S")
+	date = time.strftime("%d/%m/%Y", date)
+	date = date.split('/')
+	date = int(date[0])
+
+	return date
+
+
+
+# {'id': '5bdb662bdf70b043fffccc9f', 
+# 'checkItemStates': None, 
+# 'closed': False, 
+# 'dateLastActivity': '2018-11-16T00:18:04.273Z',
+# 'desc': '', 
+# 'descData': None, 
+# 'idBoard': '5bdb65794ac71e0cc84ec17b', 
+# 'idList': '5bdb65912b808b813a89332a', 
+# 'idMembersVoted': [], 'idShort': 12, 
+# 'idAttachmentCover': None, 
+# 'idLabels': ['5bdb6579a724a908c0b057dd', '5bdb6579a724a908c0b057d6', '5bdb6579a724a908c0b057d8'], 
+# 'manualCoverAttachment': False, 
+# 'name': 'Ericsson', 
+# 'pos': 98303, 
+# 'shortLink': 'qqhdxrAD', 
+# 'badges': {'votes': 0, 'attachmentsByType': {'trello': {'board': 0, 'card': 0}}, 'viewingMemberVoted': False, 'subscribed': False, 'fogbugz': '', 'checkItems': 0, 'checkItemsChecked': 0, 'comments': 0, 'attachments': 0, 'description': False, 'due': None, 'dueComplete': False}, 
+# 'dueComplete': False, 
+# 'due': None, 
+# 'idChecklists': [], 
+# 'idMembers': [], 
+# 'labels': [{'id': '5bdb6579a724a908c0b057dd', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Empresa Interessada', 'color': 'purple'}, {'id': '5bdb6579a724a908c0b057d6', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Contrato Assinado', 'color': 'orange'}, {'id': '5bdb6579a724a908c0b057d8', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Atualizado', 'color': 'green'}], 
+# 'shortUrl': 'https://trello.com/c/qqhdxrAD', 
+# 'subscribed': False, 
+# 'url': 'https://trello.com/c/qqhdxrAD/12-ericsson'}
+
+
