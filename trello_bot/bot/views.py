@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from .models import Company, Hunter
 from .commands import *
 import requests
 import json
@@ -21,6 +22,12 @@ def main(request):
 		try:
 			body_unicode = request.body.decode('utf-8')
 			data = json.loads(body_unicode)
+
+			# companies_not_hunted = get_nested_objects('boards',board_id,'cards')
+			# print('Nº de empresas a serem captadas:', len(companies_not_hunted))
+
+			# n_companies_hunted = Company.objects.count()
+			# print('Nº de empresas que estão sendo captadas:', companies_hunted)
 
 			# get board labels
 			labels_response = get_nested_objects('boards',board_id, 'labels')

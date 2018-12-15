@@ -71,7 +71,7 @@ def update_card_labels(card_obj, labels):
 				not_in = False
 				break
 		if not_in:
-			post_label('cards',card_id,'atention_label')
+			post_label('cards',card_id,atention_label)
 
 	# urgent
 	else:
@@ -81,7 +81,7 @@ def update_card_labels(card_obj, labels):
 				not_in = False
 				break
 		if not_in:
-			post_label('cards',card_id,'urgent_label')
+			post_label('cards',card_id,urgent_label)
 
 
 
@@ -121,32 +121,3 @@ def format_date(date):
 	date = int(date[0])
 
 	return date
-
-
-
-# {'id': '5bdb662bdf70b043fffccc9f', 
-# 'checkItemStates': None, 
-# 'closed': False, 
-# 'dateLastActivity': '2018-11-16T00:18:04.273Z',
-# 'desc': '', 
-# 'descData': None, 
-# 'idBoard': '5bdb65794ac71e0cc84ec17b', 
-# 'idList': '5bdb65912b808b813a89332a', 
-# 'idMembersVoted': [], 'idShort': 12, 
-# 'idAttachmentCover': None, 
-# 'idLabels': ['5bdb6579a724a908c0b057dd', '5bdb6579a724a908c0b057d6', '5bdb6579a724a908c0b057d8'], 
-# 'manualCoverAttachment': False, 
-# 'name': 'Ericsson', 
-# 'pos': 98303, 
-# 'shortLink': 'qqhdxrAD', 
-# 'badges': {'votes': 0, 'attachmentsByType': {'trello': {'board': 0, 'card': 0}}, 'viewingMemberVoted': False, 'subscribed': False, 'fogbugz': '', 'checkItems': 0, 'checkItemsChecked': 0, 'comments': 0, 'attachments': 0, 'description': False, 'due': None, 'dueComplete': False}, 
-# 'dueComplete': False, 
-# 'due': None, 
-# 'idChecklists': [], 
-# 'idMembers': [], 
-# 'labels': [{'id': '5bdb6579a724a908c0b057dd', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Empresa Interessada', 'color': 'purple'}, {'id': '5bdb6579a724a908c0b057d6', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Contrato Assinado', 'color': 'orange'}, {'id': '5bdb6579a724a908c0b057d8', 'idBoard': '5bdb65794ac71e0cc84ec17b', 'name': 'Atualizado', 'color': 'green'}], 
-# 'shortUrl': 'https://trello.com/c/qqhdxrAD', 
-# 'subscribed': False, 
-# 'url': 'https://trello.com/c/qqhdxrAD/12-ericsson'}
-
-
