@@ -1,6 +1,6 @@
 import requests
-import json
 import time
+from .models import Hunter, Company
 
 file_token = open('token.txt', 'r')
 token = file_token.read()

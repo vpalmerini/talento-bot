@@ -1,7 +1,6 @@
 env/
-trello_bot/migrations/
-trello_bot/trello_bot/__pycache__
-trello_bot/bot/__pycache__
+**/migrations
+**/__pycache__
 
 *.txt
 *.sqlite3

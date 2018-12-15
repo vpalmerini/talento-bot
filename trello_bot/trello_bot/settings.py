@@ -38,6 +38,8 @@ SECRET_KEY = find_or_create_secret_key()
 DEBUG = True
 
 ALLOWED_HOSTS = ['50d6a238.ngrok.io']
+if DEBUG:
+    ALLOWED_HOSTS.append('localhost')
 
 
 # Application definition
@@ -49,7 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bot'
+    'bot',
 ]
 
 MIDDLEWARE = [

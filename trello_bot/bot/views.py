@@ -1,19 +1,7 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Company, Hunter
 from .commands import *
-import requests
-import json
 import time
-
-file_token = open('token.txt', 'r')
-token = file_token.read()
-
-file_key = open('key.txt', 'r')
-key = file_key.read()
-
-board_id = '5bdb65794ac71e0cc84ec17b'
-api_url = 'https://api.trello.com/1'
 
 @csrf_exempt
 def main(request):
@@ -30,25 +18,16 @@ def main(request):
 			# print('Nº de empresas que estão sendo captadas:', companies_hunted)
 
 			# get board labels
-			labels_response = get_nested_objects('boards',board_id, 'labels')
-			labels = json.loads(labels_response.text)
+			labels = get_nested_objects('boards',board_id, 'labels').json()
 
 			# get board lists
-			lists_response = get_nested_objects('boards',board_id,'lists')
-			lists = json.loads(lists_response.text)
+			lists = get_nested_objects('boards',board_id,'lists').json()
 
-			for list_obj in lists:
+			for list_obj in lists[1:]:
 				list_obj_id = list_obj['id']
-
-				if list_obj['name'] == 'Empresas':
-					continue
-				
-				else:
-					cards_response = get_nested_objects('lists', list_obj_id, 'cards')
-					cards = json.loads(cards_response.text)
-
-					for card_obj in cards:
-						update_card_labels(card_obj,labels)
+				cards = get_nested_objects('lists', list_obj_id, 'cards').json()
+				for card_obj in cards:
+					update_card_labels(card_obj, labels)
 					
 		except Exception as e:
 			raise e
