@@ -16,6 +16,30 @@ api_url = 'https://api.trello.com/1'
 ATENTION_DEADLINE = 7
 URGENT_DEADLINE = 12
 
+def email_reminder(company):
+	from email.mime.multipart import MIMEMultipart
+	from email.mime.text import MIMEText
+	from smtplib import SMTP
+
+	# email credentials
+	from_adress = 'captacao@mte.org.br'
+	with open('password.txt', 'r') as pswd_file:
+		password = pswd_file.readline()
+
+	# message building
+	msg = MIMEMultipart()
+	msg['From'] = from_adress
+	msg['To'] = company.hunter.email
+	msg['Subject'] = "Você precisa entrar em contato com a empresa " + company.name + "!"
+	body = "Já faz muito tempo desde que a empresa " + company.name + " respondeu sobre a sua participação na Talento 2019.<br>Por favor entre em contato novamente para ober uma resposta.<br><br>Gratos,<br>Organização Talento 2019."
+	msg.attach(MIMEText(body, 'html'))
+
+	# email sending
+	with SMTP('br84.hostgator.com.br', 26) as server:
+		server.starttls()
+		server.login(msg['From'], password)
+		server.sendmail(msg['From'], msg['To'], msg.as_string())
+
 def update_card_labels(card_obj, labels):
 
 	updated_label = {
