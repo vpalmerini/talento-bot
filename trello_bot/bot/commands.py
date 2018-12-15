@@ -1,4 +1,3 @@
-from .views import *
 import requests
 import json
 import time
@@ -16,7 +15,40 @@ api_url = 'https://api.trello.com/1'
 ATENTION_DEADLINE = 7
 URGENT_DEADLINE = 12
 
+def update_db():
+	""" includes all hunters and companies in the trello
+		board and updates thier information in the db
+	"""
+
+	lists = get_nested_objects('boards', board_id, 'lists').json()
+	cards = get_nested_objects('lists', lists[0]['id'], 'cards').json()
+	# the list of emails are in the first list
+	emails = []
+	for i in range(len(lists)-1):
+		emails.append(cards[i]['name'])
+
+	# updating hunters
+	for list, email in zip(lists[1:], emails):
+		try:
+			h = Hunter.objects.get(email=email)
+		except:
+			h = Hunter(email=email, name=list['name'], list_id=list['id'])
+		h.save()
+		cards = get_nested_objects('lists', list['id'], 'cards').json()
+
+		# updating companies
+		for card in cards:
+			try:
+				c = Company.objects.get(name=card['name'])
+			except:
+				c = Company(name=card['name'], card_id=card['id'], category=card['desc'], hunter=h)
+			c.save()
+
 def email_reminder(company):
+	""" sends email to the hunter responsible for a company
+		that has not answered in a while
+	"""
+	
 	from email.mime.multipart import MIMEMultipart
 	from email.mime.text import MIMEText
 	from smtplib import SMTP
