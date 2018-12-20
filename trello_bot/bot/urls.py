@@ -4,4 +4,5 @@ from .views import token
 
 urlpatterns = [
 	path(token, views.main, name='main'),
+	path('', views.dash, name='dash'),
 ]
