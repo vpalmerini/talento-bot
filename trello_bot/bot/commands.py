@@ -42,6 +42,7 @@ def update_db():
 				c = Company.objects.get(name=card['name'])
 			except:
 				c = Company(name=card['name'], card_id=card['id'], category=card['desc'], hunter=h)
+			c.category = card['desc']
 			c.save()
 
 def email_reminder(company):
