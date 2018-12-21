@@ -37,7 +37,7 @@ SECRET_KEY = find_or_create_secret_key()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['50d6a238.ngrok.io']
+ALLOWED_HOSTS = ['8d247cd6.ngrok.io']
 
 
 # Application definition

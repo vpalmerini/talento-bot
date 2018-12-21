@@ -5,6 +5,7 @@ from .commands import *
 import requests
 import json
 import time
+import schedule
 
 file_token = open('token.txt', 'r')
 token = file_token.read()
@@ -22,6 +23,7 @@ def main(request):
 		try:
 			body_unicode = request.body.decode('utf-8')
 			data = json.loads(body_unicode)
+			print(data)
 
 			# companies_not_hunted = get_nested_objects('boards',board_id,'cards')
 			# print('Nº de empresas a serem captadas:', len(companies_not_hunted))
@@ -56,3 +58,39 @@ def main(request):
 	return HttpResponse(status=200)
 
 
+
+def polling():
+
+	url = "{}/boards/{}".format(api_url,board_id)
+
+	querystring = {
+			"actions":"all",
+			"boardStars":"none",
+			"cards":"none",
+			"card_pluginData":"false",
+			"checklists":"none",
+			"customFields":"false",
+			"fields":"name,desc,descData,closed,idOrganization,pinned,url,shortUrl,prefs,labelNames",
+			"lists":"open",
+			"members":"none",
+			"memberships":"none",
+			"membersInvited":"none",
+			"membersInvited_fields":"all",
+			"pluginData":"false",
+			"organization":"false",
+			"organization_pluginData":"false",
+			"myPrefs":"false",
+			"tags":"false",
+			"key":key,
+			"token":token}
+
+	response = requests.get(url, params=querystring)
+
+	requests.post('https://50d6a238.ngrok.io/{}'.format(token), data=response.text)
+
+
+schedule.every(1).minutes.do(polling)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)

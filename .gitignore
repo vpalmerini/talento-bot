@@ -2,6 +2,7 @@ env/
 trello_bot/migrations/
 trello_bot/trello_bot/__pycache__
 trello_bot/bot/__pycache__
+trello_bot/trello_bot/secret_key.py
 
 *.txt
 *.sqlite3
