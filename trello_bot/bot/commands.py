@@ -1,7 +1,6 @@
-from .views import *
 import requests
-import json
 import time
+from .models import Hunter, Company
 
 file_token = open('token.txt', 'r')
 token = file_token.read()
@@ -15,6 +14,64 @@ api_url = 'https://api.trello.com/1'
 # deadline variables
 ATENTION_DEADLINE = 7
 URGENT_DEADLINE = 12
+
+def update_db():
+	""" includes all hunters and companies in the trello
+		board and updates thier information in the db
+	"""
+
+	lists = get_nested_objects('boards', board_id, 'lists').json()
+	cards = get_nested_objects('lists', lists[0]['id'], 'cards').json()
+	# the list of emails are in the first list
+	emails = []
+	for i in range(len(lists)-1):
+		emails.append(cards[i]['name'])
+
+	# updating hunters
+	for list, email in zip(lists[1:], emails):
+		try:
+			h = Hunter.objects.get(email=email)
+		except:
+			h = Hunter(email=email, name=list['name'], list_id=list['id'])
+		h.save()
+		cards = get_nested_objects('lists', list['id'], 'cards').json()
+
+		# updating companies
+		for card in cards:
+			try:
+				c = Company.objects.get(name=card['name'])
+			except:
+				c = Company(name=card['name'], card_id=card['id'], category=card['desc'], hunter=h)
+			c.category = card['desc']
+			c.save()
+
+def email_reminder(company):
+	""" sends email to the hunter responsible for a company
+		that has not answered in a while
+	"""
+	
+	from email.mime.multipart import MIMEMultipart
+	from email.mime.text import MIMEText
+	from smtplib import SMTP
+
+	# email credentials
+	from_adress = 'captacao@mte.org.br'
+	with open('password.txt', 'r') as pswd_file:
+		password = pswd_file.readline()
+
+	# message building
+	msg = MIMEMultipart()
+	msg['From'] = from_adress
+	msg['To'] = company.hunter.email
+	msg['Subject'] = "Você precisa entrar em contato com a empresa " + company.name + "!"
+	body = "Já faz muito tempo desde que a empresa " + company.name + " respondeu sobre a sua participação na Talento 2019.<br>Por favor entre em contato novamente para ober uma resposta.<br><br>Gratos,<br>Organização Talento 2019."
+	msg.attach(MIMEText(body, 'html'))
+
+	# email sending
+	with SMTP('br84.hostgator.com.br', 26) as server:
+		server.starttls()
+		server.login(msg['From'], password)
+		server.sendmail(msg['From'], msg['To'], msg.as_string())
 
 def update_card_labels(card_obj, labels):
 

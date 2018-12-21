@@ -5,6 +5,13 @@ class Hunter(models.Model):
 
 	email = models.EmailField(max_length=100, primary_key=True)
 	name = models.CharField(max_length=100)
+	list_id = models.CharField(max_length=100)
+
+	def contact_count(self):
+		return len(Company.objects.filter(hunter=self))
+
+	def closed_count(self):
+		return len(Company.objects.filter(hunter=self, status='CL'))
 
 	def __str__(self):
 		return self.name
@@ -12,7 +19,8 @@ class Hunter(models.Model):
 
 class Company(models.Model):
 
-	name = models.CharField(max_length=100)
+	name = models.CharField(max_length=100, primary_key=True)
+	card_id = models.CharField(max_length=100)
 
 	FINANCIAL = 'FN'
 	CONSULTING = 'CS'
