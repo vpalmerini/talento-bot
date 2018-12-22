@@ -151,7 +151,6 @@
                                             <thead>
                                                 <tr>
                                                     <th class="serial">#</th>
-                                                    <th class="avatar">Avatar</th>
                                                     <th>Nome</th>
                                                     <th>Empresas em Contato</th>
                                                     <th>Empresas Fechadas</th>
@@ -162,11 +161,6 @@
                                                 {% for i, hunter in hunters.items %}
                                                     <tr>
                                                         <td class="serial">{{ i }}.</td>
-                                                        <td class="avatar">
-                                                            <div class="round-img">
-                                                                <a href="#"><img class="rounded-circle" src={{ avatar_url.i }} alt=""></a>
-                                                            </div>
-                                                        </td>
                                                         <td>  <span class="name">{{ hunter.name }}</span> </td>
                                                         <td>{{ hunter.contact_count }}</td>
                                                         <td>{{ hunter.closed_count }}</td>
@@ -203,18 +197,6 @@
         <!-- /.content -->
         <div class="clearfix"></div>
         <!-- Footer -->
-        <footer class="site-footer">
-            <div class="footer-inner bg-white">
-                <div class="row">
-                    <div class="col-sm-6">
-                        Copyright &copy; 2018 Ela Admin
-                    </div>
-                    <div class="col-sm-6 text-right">
-                        Designed by <a href="https://colorlib.com">Colorlib</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
         <!-- /.site-footer -->
     </div>
     <!-- /#right-panel -->

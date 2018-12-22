@@ -12,17 +12,23 @@ board_id = '5bdb65794ac71e0cc84ec17b'
 api_url = 'https://api.trello.com/1'
 
 # deadline variables
-ATENTION_DEADLINE = 7
-URGENT_DEADLINE = 12
+ATENTION_DEADLINE = 1
+URGENT_DEADLINE = 2
+
+# def get_webhook_id(key, token):
+
+# 	url = 'https://api.trello.com/1/members/me/tokens?webhooks=true&key={}&token={}'.format(key,token)
+# 	response = requests.get(url)
+
 
 def update_db():
-	""" includes all hunters and companies in the trello
-		board and updates thier information in the db
+	""" includes all hunters and companies in trello
+		board and updates their information into db
 	"""
 
 	lists = get_nested_objects('boards', board_id, 'lists').json()
 	cards = get_nested_objects('lists', lists[0]['id'], 'cards').json()
-	# the list of emails are in the first list
+	# the list of emails is in the first list
 	emails = []
 	for i in range(len(lists)-1):
 		emails.append(cards[i]['name'])
@@ -117,8 +123,14 @@ def update_card_labels(card_obj, labels):
 			if label['name'] == 'Atualizado':
 				not_in = False
 				break
+
 		if not_in:
 			post_label('cards',card_id,updated_label)
+
+			for label in card_labels:
+				if label['name'] == 'Atenção' or label['name'] == 'Urgente':
+					remove_label(card_id,label['id'])
+
 
 	# atention
 	elif (time_inert < URGENT_DEADLINE):
@@ -127,8 +139,13 @@ def update_card_labels(card_obj, labels):
 			if label['name'] == 'Atenção':
 				not_in = False
 				break
+
 		if not_in:
 			post_label('cards',card_id,atention_label)
+
+			for label in card_labels:
+				if label['name'] == 'Atualizado':
+					remove_label(card_id,label['id'])
 
 	# urgent
 	else:
@@ -140,6 +157,9 @@ def update_card_labels(card_obj, labels):
 		if not_in:
 			post_label('cards',card_id,urgent_label)
 
+			for label in card_labels:
+				if label['name'] == 'Atenção':
+					remove_label(card_id,label['id'])
 
 
 def get_nested_objects(ext_object, object_id, nested_object):
@@ -178,3 +198,14 @@ def format_date(date):
 	date = int(date[0])
 
 	return date
+
+
+def remove_label(card_id, label_id):
+
+	url = '{}/cards/{}/idLabels/{}'.format(api_url,card_id,label_id)
+
+	querystring = {
+		'key':key,
+		'token':token}
+
+	requests.delete(url,params=querystring)

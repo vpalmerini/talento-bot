@@ -5,7 +5,7 @@ class Hunter(models.Model):
 
 	email = models.EmailField(max_length=100, primary_key=True)
 	name = models.CharField(max_length=100)
-	list_id = models.CharField(max_length=100)
+	list_id = models.CharField(max_length=100, null=True)
 
 	def contact_count(self):
 		return len(Company.objects.filter(hunter=self))
@@ -20,7 +20,7 @@ class Hunter(models.Model):
 class Company(models.Model):
 
 	name = models.CharField(max_length=100, primary_key=True)
-	card_id = models.CharField(max_length=100)
+	card_id = models.CharField(max_length=100, null=True)
 
 	FINANCIAL = 'FN'
 	CONSULTING = 'CS'

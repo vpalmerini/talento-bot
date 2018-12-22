@@ -10,16 +10,6 @@ def main(request):
 
 	if request.method == 'POST':
 		try:
-			body_unicode = request.body.decode('utf-8')
-			data = json.loads(body_unicode)
-			print(data)
-
-			# companies_not_hunted = get_nested_objects('boards',board_id,'cards')
-			# print('Nº de empresas a serem captadas:', len(companies_not_hunted))
-
-			# n_companies_hunted = Company.objects.count()
-			# print('Nº de empresas que estão sendo captadas:', companies_hunted)
-
 			# get board labels
 			labels = get_nested_objects('boards',board_id, 'labels').json()
 
@@ -35,7 +25,15 @@ def main(request):
 		except Exception as e:
 			raise e
 
+	# schedule.every(1).minutes.do(polling)
+	schedule.every().day.at("12:00").do(polling)
+
+	while True:
+	    schedule.run_pending()
+	    time.sleep(1)
+
 	return HttpResponse(status=200)
+
 
 def dash(request):
 	update_db()
@@ -61,7 +59,7 @@ def dash(request):
 
 def polling():
 
-	url = "{}/boards/{}".format(api_url,board_id)
+	url = 'https://trello.com/b/KFOrbNWy/talento-2019-captação.json'
 
 	querystring = {
 			"actions":"all",
@@ -86,11 +84,4 @@ def polling():
 
 	response = requests.get(url, params=querystring)
 
-	requests.post('https://50d6a238.ngrok.io/{}'.format(token), data=response.text)
-
-
-schedule.every(1).minutes.do(polling)
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+	requests.post('https://d31715c0.ngrok.io/{}'.format(token), data=response.text)

@@ -37,13 +37,15 @@ SECRET_KEY = find_or_create_secret_key()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-<<<<<<< HEAD
-ALLOWED_HOSTS = ['8d247cd6.ngrok.io']
-=======
-ALLOWED_HOSTS = ['50d6a238.ngrok.io']
-if DEBUG:
-    ALLOWED_HOSTS.append('localhost')
->>>>>>> f9d75bde21a2dc908df45f0e01a7069d6a03ce0d
+
+ALLOWED_HOSTS = ['d31715c0.ngrok.io']
+# <<<<<<< HEAD
+# ALLOWED_HOSTS = ['8d247cd6.ngrok.io']
+# =======
+# ALLOWED_HOSTS = ['50d6a238.ngrok.io']
+# if DEBUG:
+#     ALLOWED_HOSTS.append('localhost')
+# >>>>>>> f9d75bde21a2dc908df45f0e01a7069d6a03ce0d
 
 
 # Application definition
