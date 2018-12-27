@@ -1,18 +1,81 @@
 import requests
-import time
+from datetime import datetime, timedelta
 from .models import Hunter, Company
 
 file_token = open('token.txt', 'r')
-token = file_token.read()
+token = file_token.readline()
 
 file_key = open('key.txt', 'r')
-key = file_key.read()
+key = file_key.readline()
 
 board_id = '5bdb65794ac71e0cc84ec17b'
 api_url = 'https://api.trello.com/1'
 
+smtp_host = 'br84.hostgator.com.br'
+smtp_port = 26
+
+# board labels
+status_labels = {
+	'IT': {
+		'id': '5bdb6579a724a908c0b057dd',
+		'idBoard': board_id,
+		'name': 'Empresa Interessada',
+		'color': 'purple',
+	},
+	'PL': {
+		'id': '5bedd6c41c344e3b9fe97dd2',
+		'idBoard': board_id,
+		'name': 'Carta Proposta Enviada',
+		'color': 'pink',
+	},
+	'CL': {
+		'id': '5bedd6c1facc3a5c40b3c380',
+		'idBoard': board_id,
+		'name': 'Empresa Fechada',
+		'color': 'lime',
+	},
+	'SG': {
+		'id': '5bdb6579a724a908c0b057d6',
+		'idBoard': board_id,
+		'name': 'Contrato Assinado',
+		'color': 'orange',
+	}, 
+	'DC': {
+		'id': '5bdb6579a724a908c0b057df',
+		'idBoard': board_id,
+		'name': 'Empresa Não Interessada',
+		'color': 'blue',
+	},
+	'PD': {
+		'id': '5bedd6c76796866dcad2f697',
+		'idBoard': board_id,
+		'name': 'Patrocínio Pago',
+		'color': 'black',
+	},
+}
+contact_labels = {
+	'updated': {
+		'id': '5bdb6579a724a908c0b057d8', 
+		'idBoard': board_id, 
+		'name': 'Atualizado', 
+		'color': 'green',
+	},
+	'attention': {
+		'id': '5bdb6579a724a908c0b057d7',
+		'idBoard': board_id,
+		'name': 'Atenção',
+		'color': 'yellow',
+	},
+	'urgent': {
+		'id': '5bdb6579a724a908c0b057d9',
+		'idBoard': board_id,
+		'name': 'Urgente',
+		'color': 'red',
+	},
+}
+
 # deadline variables
-ATENTION_DEADLINE = 1
+ATTENTION_DEADLINE = 1
 URGENT_DEADLINE = 2
 
 # def get_webhook_id(key, token):
@@ -29,9 +92,7 @@ def update_db():
 	lists = get_nested_objects('boards', board_id, 'lists').json()
 	cards = get_nested_objects('lists', lists[0]['id'], 'cards').json()
 	# the list of emails is in the first list
-	emails = []
-	for i in range(len(lists)-1):
-		emails.append(cards[i]['name'])
+	emails = [cards[i]['name'] for i in range(len(lists)-1)]
 
 	# updating hunters
 	for list, email in zip(lists[1:], emails):
@@ -70,105 +131,74 @@ def email_reminder(company):
 	msg['From'] = from_adress
 	msg['To'] = company.hunter.email
 	msg['Subject'] = "Você precisa entrar em contato com a empresa " + company.name + "!"
-	body = "Já faz muito tempo desde que a empresa " + company.name + " respondeu sobre a sua participação na Talento 2019.<br>Por favor entre em contato novamente para ober uma resposta.<br><br>Gratos,<br>Organização Talento 2019."
+	body = "<h4>Já faz muito tempo desde que a empresa " + company.name + " respondeu sobre a sua participação na Talento 2019.<br>Por favor entre em contato novamente para ober uma resposta.</h4><br><br>Gratos,<br>Organização Talento 2019."
 	msg.attach(MIMEText(body, 'html'))
 
 	# email sending
-	with SMTP('br84.hostgator.com.br', 26) as server:
+	with SMTP(smtp_host, smtp_port) as server:
 		server.starttls()
 		server.login(msg['From'], password)
 		server.sendmail(msg['From'], msg['To'], msg.as_string())
 
-def update_card_labels(card_obj, labels):
+def update_status_labels(company):
+	# company card
+	card = get_nested_objects('cards', company.card_id).json()
 
-	updated_label = {
-			'id': '5bdb6579a724a908c0b057d8', 
-			'idBoard': '5bdb65794ac71e0cc84ec17b', 
-			'name': 'Atualizado', 
-			'color': 'green'
-	}
+	status_list = [
+		Company.PAID,
+		Company.DECLINED,
+		Company.SIGNED,
+		Company.CLOSED,
+		Company.PLSENT,
+		Company.INTERESTED,
+		Company.CONTACTED,
+	]
+	for status in status_list:
+		if status_labels[status] in card['labels'] and company.status != status:
+			company.status = status
+			company.set_last_activity()
+			if status == Company.CLOSED:
+				company.month_closed = datetime.now().month
+			for label in card['labels']:
+				if label != status_labels[status] and label not in contact_labels.values():
+					remove_label(card['id'], label['id'])
+			break
 
-	atention_label = {
-			'id':'5bdb6579a724a908c0b057d7',
-			'idBoard':'5bdb65794ac71e0cc84ec17b',
-			'name':'Atenção',
-			'color':'yellow'
-	}
-
-	urgent_label = {
-			'id':'5bdb6579a724a908c0b057d9',
-			'idBoard':'5bdb65794ac71e0cc84ec17b',
-			'name':'Urgente',
-			'color':'red'
-	}
-
-	card_id = card_obj['id']
-	card_labels = card_obj['labels']
-	card_date = card_obj['dateLastActivity']
-	card_date_day = format_date(card_date)
-
-	now = time.asctime()
-	now = time.strptime(now)
-	now = time.strftime('%d/%m/%Y', now)
-	now = now.split('/')
-	now_day = int(now[0])
-
-	time_inert = now_day - card_date_day
-
-	not_in = True
+def update_contact_labels(company):
+	# company card
+	card = get_nested_objects('cards', company.card_id).json()
 
 	# updated
-	if (time_inert < ATENTION_DEADLINE):
-		for label in card_labels:
-			if label['name'] == 'Atualizado':
-				not_in = False
-				break
+	if company.inactive_time.days < ATTENTION_DEADLINE:
+		for label in card['labels']:
+			if label == contact_labels['attention'] or label == contact_labels['urgent']:
+				remove_label(card['id'], label['id'])
+		if contact_labels['updated'] not in card['labels']:
+			post_label(card['id'], contact_labels['updated'])
 
-		if not_in:
-			post_label('cards',card_id,updated_label)
-
-			for label in card_labels:
-				if label['name'] == 'Atenção' or label['name'] == 'Urgente':
-					remove_label(card_id,label['id'])
-
-
-	# atention
-	elif (time_inert < URGENT_DEADLINE):
-		not_in = True
-		for label in card_labels:
-			if label['name'] == 'Atenção':
-				not_in = False
-				break
-
-		if not_in:
-			post_label('cards',card_id,atention_label)
-
-			for label in card_labels:
-				if label['name'] == 'Atualizado':
-					remove_label(card_id,label['id'])
+	# attention
+	elif company.inactive_time.days < URGENT_DEADLINE:
+		for label in card['labels']:
+			if label == contact_labels['updated'] or label == contact_labels['urgent']:
+				remove_label(card['id'], label['id'])
+		if contact_labels['attention'] not in card['labels']:
+			post_label(card['id'], contact_labels['attention'])
 
 	# urgent
 	else:
-		not_in = True
-		for label in card_labels:
-			if label['name'] == 'Urgente':
-				not_in = False
-				break
-		if not_in:
-			post_label('cards',card_id,urgent_label)
+		for label in card['labels']:
+			if label == contact_labels['attention'] or label == contact_labels['updated']:
+				remove_label(card['id'], label['id'])
+		if contact_labels['urgent'] not in card['labels']:
+			post_label(card['id'], contact_labels['urgent'])
 
-			for label in card_labels:
-				if label['name'] == 'Atenção':
-					remove_label(card_id,label['id'])
+def get_nested_objects(ext_object, object_id, nested_object=''):
 
-
-def get_nested_objects(ext_object, object_id, nested_object):
-
-	url = '{}/{}/{}/{}'.format(api_url,ext_object,object_id,nested_object)
+	url = '{}/{}/{}/{}'.format(api_url, ext_object, object_id, nested_object)
 	
 	querystring = {
 		'key':key, 
-		'token':token
+		'token':token,
 	}
 	
 	response = requests.get(url, params=querystring)
@@ -176,36 +206,26 @@ def get_nested_objects(ext_object, object_id, nested_object):
 	return response
 
 
-def post_label(ext_object, object_id, label):
+def post_label(card_id, label):
 
-	url = '{}/{}/{}/{}'.format(api_url,ext_object,object_id,'labels')
+	url = '{}/cards/{}/labels'.format(api_url, card_id)
 	
 	querystring = {
 		'key':key, 
-		'token':token
+		'token':token,
 	}
 
 	querystring.update(label)
 
 	response = requests.post(url, params=querystring)
 
-
-def format_date(date):
-
-	date = time.strptime(date[:19], "%Y-%m-%dT%H:%M:%S")
-	date = time.strftime("%d/%m/%Y", date)
-	date = date.split('/')
-	date = int(date[0])
-
-	return date
-
-
 def remove_label(card_id, label_id):
 
-	url = '{}/cards/{}/idLabels/{}'.format(api_url,card_id,label_id)
+	url = '{}/cards/{}/idLabels/{}'.format(api_url, card_id, label_id)
 
 	querystring = {
 		'key':key,
-		'token':token}
+		'token':token,
+	}
 
-	requests.delete(url,params=querystring)
+	requests.delete(url, params=querystring)
