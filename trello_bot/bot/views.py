@@ -36,24 +36,25 @@ def main(request):
 	return HttpResponse(status=200)
 
 
-def dash(request):
-	context = {
-		'hunters': {},
-		'doughnut': {},
-	}
-	hunters = Hunter.objects.all()
-	for i in range(len(hunters)):
-		context['hunters'][i+1] = hunters[i]
-
-	context['doughnut']['data'] = [
-		len(Company.objects.filter(category='FN')),
-		len(Company.objects.filter(category='CS')),
-		len(Company.objects.filter(category='ID')),
-	]
-
-	context['total_closed'] = len(Company.objects.filter(status='CL'))
+def dashboard(request):
+	context = {}
+	# hunters data
+	hunters = sorted(Hunter.objects.all(),
+					 key=lambda x: x.closed_count,
+					 reverse=True)
+	context['hunters'] = {i+1:hunters[i] for i in range(len(hunters))}
+	# category data
+	context['doughnut'] = [Company.objects.filter(category=i).count()
+							for i in Company.category_list]
+	# month closed data
+	context['bar'] = [Company.objects.filter(month_closed=i).count()
+						for i in range(1,13)]
+	# total closed data
+	closed_list = [Company.objects.filter(status=i).count()
+					for i in Company.status_list[-3:]]
+	context['total_closed'] = sum(closed_list)
  
-	return render(request, 'bot/dash.html', context)
+	return render(request, 'bot/dashboard.html', context)
 
 
 def polling():
@@ -88,5 +89,5 @@ def polling():
 		company.update_status_labels()
 		company.update_contact_labels()
 		# commented out to avoid spamming
-		# if company.needs_reminder():
+		# if company.needs_reminder:
 			# company.email_reminder()

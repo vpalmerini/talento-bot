@@ -9,11 +9,15 @@ class Hunter(models.Model):
 	name = models.CharField(max_length=100)
 	list_id = models.CharField(max_length=100, null=True)
 
+	@property
 	def contact_count(self):
-		return len(Company.objects.filter(hunter=self))
+		return Company.objects.filter(hunter=self).count()
 
+	@property
 	def closed_count(self):
-		return len(Company.objects.filter(hunter=self, status='CL'))
+		closed_list = [Company.objects.filter(hunter=self, status=i).count()
+				for i in Company.status_list[-3:]]
+		return sum(closed_list)
 
 	def __str__(self):
 		return self.name
@@ -33,6 +37,12 @@ class Company(models.Model):
 		(CONSULTING,'Consulting'),
 		(INDUSTRY,'Industry'),
 	)
+
+	category_list = [
+		FINANCIAL,
+		CONSULTING,
+		INDUSTRY,
+	]
 
 	category = models.CharField(max_length=2, choices=CATEGORY_CHOICES)
 
@@ -54,6 +64,16 @@ class Company(models.Model):
 		(PAID, 'Paid'),
 	)
 
+	status_list = [
+		CONTACTED,
+		INTERESTED,
+		PLSENT,
+		DECLINED,
+		CLOSED,
+		SIGNED,
+		PAID,
+	]
+	
 	status = models.CharField(
 		max_length=2,
 		choices=STATUS_CHOICES,
@@ -63,22 +83,29 @@ class Company(models.Model):
 	last_activity = models.DateTimeField(default=timezone.now)
 	hunter = models.ForeignKey('Hunter', on_delete=models.CASCADE)
 	month_closed = models.IntegerField(
-		validators = [MinValueValidator(1), MaxValueValidator(12)],
+		validators = [MinValueValidator(1), MaxValueValidator(8)],
 		null = True,
 		blank = True,
 	)
 
+	# deadline variables
+	ATTENTION_DEADLINE = 1
+	URGENT_DEADLINE = 12
+
+	@property
 	def inactive_time(self):
 		return timezone.now() - self.last_activity
 
+	@property
+	def needs_reminder(self):
+		finished = [Company.DECLINED, Company.SIGNED, Company.PAID]
+		return not (
+			any( self.status == i for i in finished )
+			or ( self.inactive_time.days < 12 )
+		)
+
 	def set_last_activity(self):
 		self.last_activity = timezone.now()
-
-	def needs_reminder(self): 
-		return not (
-			any( self.status == i for i in [Company.DECLINED, Company.SIGNED, Company.PAID] )
-			or ( self.inactive_time().days < 12 )
-		)
 
 	def email_reminder(self):
 		""" sends email to the hunter responsible for a company
@@ -111,16 +138,7 @@ class Company(models.Model):
 		# company card
 		card = get_nested_objects('cards', self.card_id).json()
 
-		status_list = [
-			Company.PAID,
-			Company.DECLINED,
-			Company.SIGNED,
-			Company.CLOSED,
-			Company.PLSENT,
-			Company.INTERESTED,
-			Company.CONTACTED,
-		]
-		for status in status_list:
+		for status in reversed(Company.status_list):
 			if status_labels[status] in card['labels'] and self.status != status:
 				self.status = status
 				self.set_last_activity()
@@ -136,17 +154,17 @@ class Company(models.Model):
 		card = get_nested_objects('cards', self.card_id).json()
 
 		# updated
-		if self.inactive_time().days < ATTENTION_DEADLINE:
+		if self.inactive_time.days < Company.ATTENTION_DEADLINE:
 			for label in card['labels']:
-				if label == contact_labels['attention'] or label == contact_labels['urgent']:
+				if label != contact_labels['updated'] and label in contact_labels.values():
 					remove_label(card['id'], label['id'])
 			if contact_labels['updated'] not in card['labels']:
 				post_label(card['id'], contact_labels['updated'])
 
 		# attention
-		elif self.inactive_time().days < URGENT_DEADLINE:
+		elif self.inactive_time.days < Company.URGENT_DEADLINE:
 			for label in card['labels']:
-				if label == contact_labels['updated'] or label == contact_labels['urgent']:
+				if label != contact_labels['attention'] and label in contact_labels.values():
 					remove_label(card['id'], label['id'])
 			if contact_labels['attention'] not in card['labels']:
 				post_label(card['id'], contact_labels['attention'])
@@ -154,7 +172,7 @@ class Company(models.Model):
 		# urgent
 		else:
 			for label in card['labels']:
-				if label == contact_labels['attention'] or label == contact_labels['updated']:
+				if label != contact_labels['urgent'] and label in contact_labels.values():
 					remove_label(card['id'], label['id'])
 			if contact_labels['urgent'] not in card['labels']:
 				post_label(card['id'], contact_labels['urgent'])
