@@ -38,7 +38,7 @@ SECRET_KEY = find_or_create_secret_key()
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['d31715c0.ngrok.io']
+ALLOWED_HOSTS = ['e052be3a.ngrok.io']
 # <<<<<<< HEAD
 # ALLOWED_HOSTS = ['8d247cd6.ngrok.io']
 # =======

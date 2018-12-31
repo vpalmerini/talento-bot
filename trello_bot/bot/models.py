@@ -15,8 +15,7 @@ class Hunter(models.Model):
 
 	@property
 	def closed_count(self):
-		closed_list = [Company.objects.filter(hunter=self, status=i).count()
-				for i in Company.status_list[-3:]]
+		closed_list = [Company.objects.filter(hunter=self, status='CL').count()]
 		return sum(closed_list)
 
 	def __str__(self):
@@ -80,6 +79,7 @@ class Company(models.Model):
 		blank=True,
 		default=CONTACTED,
 	)
+
 	last_activity = models.DateTimeField(default=timezone.now)
 	hunter = models.ForeignKey('Hunter', on_delete=models.CASCADE)
 	month_closed = models.IntegerField(
@@ -90,18 +90,18 @@ class Company(models.Model):
 
 	# deadline variables
 	ATTENTION_DEADLINE = 1
-	URGENT_DEADLINE = 12
+	URGENT_DEADLINE = 2
 
 	@property
 	def inactive_time(self):
-		return timezone.now() - self.last_activity
+		return (timezone.now() - self.last_activity)
 
 	@property
 	def needs_reminder(self):
 		finished = [Company.DECLINED, Company.SIGNED, Company.PAID]
 		return not (
 			any( self.status == i for i in finished )
-			or ( self.inactive_time.days < 12 )
+			or ( self.inactive_time.days < 2 )
 		)
 
 	def set_last_activity(self):
@@ -147,6 +147,7 @@ class Company(models.Model):
 				for label in card['labels']:
 					if label != status_labels[status] and label not in contact_labels.values():
 						remove_label(card['id'], label['id'])
+				self.save()
 				break
 
 	def update_contact_labels(self):

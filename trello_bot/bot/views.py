@@ -50,8 +50,7 @@ def dashboard(request):
 	context['bar'] = [Company.objects.filter(month_closed=i).count()
 						for i in range(1,13)]
 	# total closed data
-	closed_list = [Company.objects.filter(status=i).count()
-					for i in Company.status_list[-3:]]
+	closed_list = [Company.objects.filter(status='CL').count()]
 	context['total_closed'] = sum(closed_list)
  
 	return render(request, 'bot/dashboard.html', context)
@@ -81,13 +80,15 @@ def polling():
 		"key": key,
 		"token": token,
 	}
-	response = requests.get(url, params=querystring)
-	requests.post('https://d31715c0.ngrok.io/{}'.format(token), data=response.text)
+	# response = requests.get(url, params=querystring)
+	# requests.post('https://e052be3a.ngrok.io/{}'.format(token), data=response.text)
+
+	print('polling')
 
 	update_db()
 	for company in Company.objects.all():
 		company.update_status_labels()
 		company.update_contact_labels()
 		# commented out to avoid spamming
-		# if company.needs_reminder:
-			# company.email_reminder()
+		if company.needs_reminder:
+			company.email_reminder()

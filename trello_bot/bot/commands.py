@@ -80,14 +80,8 @@ contact_labels = {
 }
 
 # deadline variables
-ATTENTION_DEADLINE = 1
-URGENT_DEADLINE = 2
-
-# def get_webhook_id(key, token):
-
-# 	url = 'https://api.trello.com/1/members/me/tokens?webhooks=true&key={}&token={}'.format(key,token)
-# 	response = requests.get(url)
-
+# ATTENTION_DEADLINE = 1
+# URGENT_DEADLINE = 2
 
 def update_db():
 	""" includes all hunters and companies in trello
@@ -106,8 +100,8 @@ def update_db():
 		except:
 			h = Hunter(email=email, name=list['name'], list_id=list['id'])
 		h.save()
-		cards = get_nested_objects('lists', list['id'], 'cards').json()
 
+		cards = get_nested_objects('lists', list['id'], 'cards').json()
 		# updating companies
 		for card in cards:
 			try:
@@ -116,6 +110,7 @@ def update_db():
 				c = Company(name=card['name'], card_id=card['id'], category=card['desc'], hunter=h)
 			c.category = card['desc']
 			c.save()
+
 
 def get_nested_objects(ext_object, object_id, nested_object=''):
 	url = '{}/{}/{}/{}'.format(api_url, ext_object, object_id, nested_object)
@@ -135,6 +130,7 @@ def post_label(card_id, label):
 	}
 	querystring.update(label)
 	response = requests.post(url, params=querystring)
+
 
 def remove_label(card_id, label_id):
 	url = '{}/cards/{}/idLabels/{}'.format(api_url, card_id, label_id)
