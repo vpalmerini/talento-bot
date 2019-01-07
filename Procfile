@@ -1,0 +1,1 @@
+web: gunicorn trello-bot.wsgi --log-file -

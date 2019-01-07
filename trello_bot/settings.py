@@ -1,6 +1,7 @@
 import sys
 import os
 from django.core.exceptions import ImproperlyConfigured
+import django_heroku
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bot.`settings`")
 
@@ -158,3 +159,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Activate Django-Heroku.
+django_heroku.settings(locals())
