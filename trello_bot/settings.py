@@ -1,16 +1,28 @@
 import sys
 import os
+from django.core.exceptions import ImproperlyConfigured
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bot.`settings`")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Handling Key Import Errors
+def get_env_variable(var_name):
+    """ Get the environment variable or return exception """
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = "Set the %s environment variable" % var_name
+        raise ImproperlyConfigured(error_msg)
+
+# Get ENV VARIABLES key
+ENV_ROLE = get_env_variable('ENV_ROLE')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-
-
 def find_or_create_secret_key():
     """ 
     Look for secret_key.py and return the SECRET_KEY entry in it if the file exists.
@@ -39,10 +51,16 @@ def find_or_create_secret_key():
 SECRET_KEY = find_or_create_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
+TRELLO_BOT_DB_PASSWORD = False
+if ENV_ROLE == 'development':
+    DEBUG = True
+    TEMPLATE_DEBUG = DEBUG
+    TRELLO_BOT_DB_PASSWORD = get_env_variable('TRELLO_BOT_DB_PASSWORD')
 
 
-ALLOWED_HOSTS = ['e052be3a.ngrok.io']
+ALLOWED_HOSTS = ['7da98aca.ngrok.io']
 
 
 # Application definition
@@ -93,8 +111,12 @@ WSGI_APPLICATION = 'trello_bot.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'trello_bot_db',
+        'USER': 'vpalmerini',
+        'PASSWORD': TRELLO_BOT_DB_PASSWORD,
+        'HOST': '',
+        'PORT': '',
     }
 }
 

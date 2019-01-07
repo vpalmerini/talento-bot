@@ -81,34 +81,6 @@ def polling():
     """ detects changes in the trello board and
             executes the necessary actions
     """
-    url = 'https://trello.com/b/KFOrbNWy/talento-2019-captação.json'
-    querystring = {
-        "actions": "all",
-        "boardStars": "none",
-        "cards": "none",
-        "card_pluginData": "false",
-        "checklists": "none",
-        "customFields": "false",
-        "fields": "name,desc,descData,closed,idOrganization," +
-                  "pinned,url,shortUrl,prefs,labelNames",
-        "lists": "open",
-        "members": "none",
-        "memberships": "none",
-        "membersInvited": "none",
-        "membersInvited_fields": "all",
-        "pluginData": "false",
-        "organization": "false",
-        "organization_pluginData": "false",
-        "myPrefs": "false",
-        "tags": "false",
-        "key": data['key'],
-        "token": data['token'],
-    }
-    # response = requests.get(url, params=querystring)
-    # requests.post('https://d31715c0.ngrok.io/{}'.format(data['token']), data=response.text)
-
-    print('polling')
-
     update_db()
     for company in Company.objects.all():
         company.update_status_labels()
