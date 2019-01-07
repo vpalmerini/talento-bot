@@ -1,1 +1,1 @@
-web: gunicorn trello-bot.wsgi --log-file -
+web: gunicorn talento-bot.wsgi --log-file -
