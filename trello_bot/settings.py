@@ -61,7 +61,7 @@ if ENV_ROLE == 'development':
     TRELLO_BOT_DB_PASSWORD = get_env_variable('TRELLO_BOT_DB_PASSWORD')
 
 
-ALLOWED_HOSTS = ['7da98aca.ngrok.io']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -110,16 +110,29 @@ WSGI_APPLICATION = 'trello_bot.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'trello_bot_db',
-        'USER': 'vpalmerini',
-        'PASSWORD': TRELLO_BOT_DB_PASSWORD,
-        'HOST': '',
-        'PORT': '',
+if os.environ.get("POSTGRES_DB"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB"),
+            "USER": os.environ.get("TRELLO_BOT_DB_USER"),
+            "PASSWORD": os.environ.get("TRELLO_BOT_DB_PASSWORD"),
+            "HOST": os.environ.get("POSTGRES_SERVER"),
+            "TEST": {
+                "NAME": "test_db",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+            "TEST": {
+                "NAME": "test_db",
+            },
+        }
+    }
 
 
 # Password validation
