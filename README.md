@@ -21,8 +21,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 #### Prerequisites
 
-- [Docker]("https://docs.docker.com/install/")
-- [Docker Compose]("https://docs.docker.com/compose/install/")
+- [Docker](https://docs.docker.com/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 #### Running
 Create a `data.json` file in the project root folder with:
