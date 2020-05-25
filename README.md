@@ -5,7 +5,7 @@ This is a Trello bot that automates some tasks for the team management and has a
 ### Motivation
 The main goal is to help the management of [Talento](https://mte.org.br/talento/) partnerships by automating some tasks, like asking for updates or list the negotiation status. The team has a Trello Board to organize all the information and the bot simply fetches board's data from Trello's API.
 
-### Tecnologies
+### Technologies
 ##### Backend
  - [Django](https://www.djangoproject.com/)
 
